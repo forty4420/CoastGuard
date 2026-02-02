@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Script Forge Pro - AI YouTube Script Generator</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --accent: #6366F1;
+            --accent-hover: #4F46E5;
+            --accent-glow: rgba(99, 102, 241, 0.25);
+            --accent-secondary: #EC4899;
+            --bg-dark: #09090B;
+            --bg-card: #18181B;
+            --bg-input: #27272A;
+            --bg-elevated: #3F3F46;
+            --text-primary: #FAFAFA;
+            --text-secondary: #A1A1AA;
+            --text-muted: #71717A;
+            --border: #27272A;
+            --border-hover: #3F3F46;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --error: #EF4444;
+            --info: #3B82F6;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Subtle grid background */
+        .bg-grid {
+            background-image:
+                linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        .glow-accent {
+            box-shadow: 0 0 20px var(--accent-glow), 0 0 40px var(--accent-glow);
+        }
+
+        .glow-subtle {
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.1);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .animate-fade-in {
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+
+        .animate-pulse-slow {
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        .shimmer {
+            background: linear-gradient(90deg, var(--accent) 0%, var(--accent-secondary) 50%, var(--accent) 100%);
+            background-size: 200% 100%;
+            animation: shimmer 2s linear infinite;
+        }
+
+        .delay-100 { animation-delay: 0.1s; opacity: 0; }
+        .delay-200 { animation-delay: 0.2s; opacity: 0; }
+        .delay-300 { animation-delay: 0.3s; opacity: 0; }
+
+        input, textarea, select {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+            border-radius: 3px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-hover);
+        }
+
+        /* Card hover effects */
+        .card-hover {
+            transition: all 0.2s ease;
+        }
+        .card-hover:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        /* Button styles */
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            transition: all 0.2s ease;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: var(--bg-input);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            transition: all 0.2s ease;
+        }
+        .btn-secondary:hover {
+            background: var(--bg-elevated);
+            border-color: var(--border-hover);
+        }
+
+        /* Input focus styles */
+        .input-focus:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        /* Tab styles */
+        .tab-active {
+            background: var(--accent);
+            color: white;
+        }
+        .tab-inactive {
+            background: transparent;
+            color: var(--text-secondary);
+        }
+        .tab-inactive:hover {
+            background: var(--bg-input);
+            color: var(--text-primary);
+        }
+
+        /* Badge styles */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            height: 4px;
+            background: var(--bg-input);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        /* Tooltip */
+        .tooltip-container {
+            position: relative;
+        }
+        .tooltip-content {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 12px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+        .tooltip-container:hover .tooltip-content {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Selection */
+        ::selection {
+            background: var(--accent);
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-grid">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useCallback } = React;
+
+        // ============================================
+        // CONSTANTS & CONFIGURATION
+        // ============================================
+
+        const VIDEO_FORMATS = {
+            shorts: {
+                name: 'YouTube Shorts',
+                duration: 60,
+                maxDuration: 60,
+                description: 'Vertical, fast-paced, hook-driven',
+                pauseMarkers: 4,
+                icon: '📱'
+            },
+            standard: {
+                name: 'Standard Video',
+                duration: 480,
+                maxDuration: 600,
+                description: '3-10 minutes, ideal for most content',
+                pauseMarkers: 12,
+                icon: '🎬'
+            },
+            longform: {
+                name: 'Long-form',
+                duration: 900,
+                maxDuration: 3600,
+                description: '15+ minutes, deep dives & documentaries',
+                pauseMarkers: 20,
+                icon: '🎥'
+            }
+        };
+
+        const SCRIPT_TEMPLATES = {
+            documentary: {
+                name: 'Documentary',
+                description: 'Informative, research-driven narrative',
+                structure: ['Cold Open', 'Introduction', 'Historical Context', 'Main Analysis', 'Expert Insights', 'Conclusion'],
+                tone: 'Authoritative yet accessible'
+            },
+            tutorial: {
+                name: 'Tutorial/How-To',
+                description: 'Step-by-step instructional content',
+                structure: ['Problem Statement', 'Overview', 'Step-by-Step Guide', 'Pro Tips', 'Common Mistakes', 'Recap'],
+                tone: 'Clear, patient, encouraging'
+            },
+            listicle: {
+                name: 'Listicle/Top 10',
+                description: 'Countdown or ranked list format',
+                structure: ['Hook', 'List Overview', 'Items with Commentary', 'Honorable Mentions', 'Winner/Conclusion'],
+                tone: 'Energetic, opinionated'
+            },
+            story: {
+                name: 'Storytelling',
+                description: 'Narrative-driven, emotional journey',
+                structure: ['Opening Scene', 'Character/Setting', 'Rising Action', 'Climax', 'Resolution', 'Reflection'],
+                tone: 'Dramatic, immersive'
+            },
+            explainer: {
+                name: 'Explainer',
+                description: 'Breaking down complex topics simply',
+                structure: ['The Question', 'Why It Matters', 'The Simple Answer', 'Going Deeper', 'Real-World Examples', 'Key Takeaway'],
+                tone: 'Curious, approachable'
+            },
+            commentary: {
+                name: 'Commentary/Opinion',
+                description: 'Personal take on trending topics',
+                structure: ['Hot Take Hook', 'Context', 'Your Perspective', 'Counter-Arguments', 'Final Verdict'],
+                tone: 'Conversational, authentic'
+            },
+            review: {
+                name: 'Review/Analysis',
+                description: 'In-depth product or content review',
+                structure: ['First Impressions', 'Features Overview', 'Pros & Cons', 'Comparisons', 'Verdict & Rating'],
+                tone: 'Honest, detailed'
+            },
+            news: {
+                name: 'News/Update',
+                description: 'Current events and breaking news',
+                structure: ['Breaking News Hook', 'The Facts', 'Background', 'Implications', 'What\'s Next'],
+                tone: 'Urgent, informative'
+            }
+        };
+
+        const CONTENT_GENRES = [
+            'Documentary', 'Entertainment', 'Educational', 'Gaming', 'Tech', 'Science',
+            'History', 'True Crime', 'Finance', 'Lifestyle', 'Comedy', 'News',
+            'Sports', 'Music', 'Art & Design', 'Travel', 'Food', 'Health & Fitness'
+        ];
+
+        const AUDIENCE_TYPES = [
+            { value: 'general', label: 'General Audience', description: 'Broad appeal, accessible language' },
+            { value: 'young_adults', label: 'Young Adults (18-25)', description: 'Trendy, fast-paced, relatable' },
+            { value: 'professionals', label: 'Professionals', description: 'Industry-specific, time-efficient' },
+            { value: 'enthusiasts', label: 'Enthusiasts/Fans', description: 'Deep knowledge assumed, insider references' },
+            { value: 'beginners', label: 'Beginners/Newcomers', description: 'No jargon, extra context' },
+            { value: 'academics', label: 'Academic/Research', description: 'Citations, methodology focus' }
+        ];
+
+        const WORDS_PER_MINUTE = 150; // Average speaking rate for narration
+
+        // ============================================
+        // STORAGE UTILITIES
+        // ============================================
+
+        const storage = {
+            prefix: 'scriptforge_',
+
+            get(key) {
+                try {
+                    const item = localStorage.getItem(this.prefix + key);
+                    return item ? JSON.parse(item) : null;
+                } catch (e) {
+                    console.error('Storage get error:', e);
+                    return null;
+                }
+            },
+
+            set(key, value) {
+                try {
+                    localStorage.setItem(this.prefix + key, JSON.stringify(value));
+                    return true;
+                } catch (e) {
+                    console.error('Storage set error:', e);
+                    return false;
+                }
+            },
+
+            remove(key) {
+                try {
+                    localStorage.removeItem(this.prefix + key);
+                    return true;
+                } catch (e) {
+                    console.error('Storage remove error:', e);
+                    return false;
+                }
+            },
+
+            getProfiles() {
+                return this.get('profiles') || [];
+            },
+
+            saveProfiles(profiles) {
+                return this.set('profiles', profiles);
+            },
+
+            getHistory() {
+                return this.get('history') || [];
+            },
+
+            addToHistory(item) {
+                const history = this.getHistory();
+                history.unshift({ ...item, id: Date.now(), timestamp: new Date().toISOString() });
+                // Keep only last 20 items
+                return this.set('history', history.slice(0, 20));
+            }
+        };
+
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+
+        const formatDuration = (seconds) => {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            if (mins === 0) return `${secs}s`;
+            if (secs === 0) return `${mins}m`;
+            return `${mins}m ${secs}s`;
+        };
+
+        const estimateWordCount = (seconds) => {
+            return Math.round((seconds / 60) * WORDS_PER_MINUTE);
+        };
+
+        const copyToClipboard = async (text) => {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch (e) {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                return true;
+            }
+        };
+
+        const downloadAsFile = (content, filename) => {
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        };
+
+        // ============================================
+        // PROMPT GENERATOR
+        // ============================================
+
+        const generatePrompt = (profile, config) => {
+            const {
+                topic,
+                duration,
+                videoFormat,
+                scriptTemplate,
+                sections,
+                pauseMarkers,
+                audience,
+                contentDepth,
+                additionalInstructions,
+                includeImagePrompts,
+                includeSEO,
+                includeThumbnail
+            } = config;
+
+            const template = SCRIPT_TEMPLATES[scriptTemplate];
+            const format = VIDEO_FORMATS[videoFormat];
+            const audienceInfo = AUDIENCE_TYPES.find(a => a.value === audience);
+            const wordCount = estimateWordCount(parseInt(duration));
+            const durationFormatted = formatDuration(parseInt(duration));
+
+            let prompt = `# YOUTUBE VIDEO SCRIPT REQUEST\n\n`;
+
+            // Executive Summary
+            prompt += `## QUICK OVERVIEW\n`;
+            prompt += `| Parameter | Value |\n`;
+            prompt += `|-----------|-------|\n`;
+            prompt += `| **Topic** | ${topic} |\n`;
+            prompt += `| **Format** | ${format.name} (${durationFormatted}) |\n`;
+            prompt += `| **Style** | ${template.name} |\n`;
+            prompt += `| **Target Words** | ~${wordCount} words |\n`;
+            prompt += `| **Image Segments** | ${pauseMarkers} |\n\n`;
+
+            // Channel Identity
+            prompt += `## CHANNEL IDENTITY\n`;
+            prompt += `**Channel:** ${profile.name}\n`;
+            prompt += `**Genre:** ${profile.genre}\n`;
+            prompt += `**Voice & Tone:** ${profile.tone}\n`;
+            prompt += `**Content Type:** ${profile.verifiability}\n\n`;
+
+            // Audience
+            prompt += `## TARGET AUDIENCE\n`;
+            prompt += `**Primary:** ${audienceInfo.label}\n`;
+            prompt += `**Approach:** ${audienceInfo.description}\n`;
+            prompt += `**Content Depth:** ${contentDepth}\n\n`;
+
+            // Technical Requirements
+            prompt += `## TECHNICAL REQUIREMENTS\n\n`;
+            prompt += `### AI Video Production Pipeline\n`;
+            prompt += `This script will be processed through an AI video production pipeline:\n`;
+            prompt += `1. **Text-to-Speech**: Script converted to AI narration\n`;
+            prompt += `2. **Image Generation**: AI visuals created for each segment\n`;
+            prompt += `3. **Video Assembly**: Audio synced with images/video clips\n\n`;
+
+            prompt += `### Critical Formatting Rules\n`;
+            prompt += `- **Paragraph Breaks**: Use double line breaks to indicate image transition points\n`;
+            prompt += `- **Target Segments**: Exactly ${pauseMarkers} distinct visual segments\n`;
+            prompt += `- **Segment Length**: ${Math.round(parseInt(duration) / parseInt(pauseMarkers))} seconds average per segment\n`;
+            prompt += `- **Pronunciation**: Use [brackets] for unusual word pronunciations\n`;
+            prompt += `- **Numbers**: Write as words (except dates/statistics)\n`;
+            prompt += `- **No Visual Cues**: Don't write "as you can see" or reference visuals directly\n\n`;
+
+            // Script Structure
+            prompt += `## SCRIPT STRUCTURE: ${template.name.toUpperCase()}\n\n`;
+            prompt += `**Template Tone:** ${template.tone}\n\n`;
+
+            let segmentIndex = 1;
+            const segmentsPerSection = Math.ceil(parseInt(pauseMarkers) / template.structure.length);
+
+            template.structure.forEach((section, idx) => {
+                if (sections[section.toLowerCase().replace(/[^a-z]/g, '_')] !== false) {
+                    const isLast = idx === template.structure.length - 1;
+                    const sectionSegments = isLast ?
+                        parseInt(pauseMarkers) - segmentIndex + 1 :
+                        Math.min(segmentsPerSection, parseInt(pauseMarkers) - segmentIndex + 1);
+
+                    prompt += `### ${idx + 1}. ${section.toUpperCase()}\n`;
+
+                    // Section-specific guidance based on template
+                    switch(scriptTemplate) {
+                        case 'documentary':
+                            if (section === 'Cold Open') {
+                                prompt += `Start with a powerful, cinematic moment that drops the viewer into the story. No introduction, no context—just immediate immersion.\n`;
+                            } else if (section === 'Introduction') {
+                                prompt += `Now pull back and introduce the topic. Establish what this video will explore and why it matters.\n`;
+                            } else if (section === 'Historical Context') {
+                                prompt += `Provide essential background. What events, people, or circumstances led to this topic?\n`;
+                            } else if (section === 'Main Analysis') {
+                                prompt += `The meat of your documentary. Present your findings, evidence, and insights with specific details.\n`;
+                            } else if (section === 'Expert Insights') {
+                                prompt += `Reference studies, expert opinions, or authoritative sources that support your narrative.\n`;
+                            } else if (section === 'Conclusion') {
+                                prompt += `Synthesize everything. What's the bigger picture? What should viewers take away?\n`;
+                            }
+                            break;
+                        case 'tutorial':
+                            if (section === 'Problem Statement') {
+                                prompt += `Hook viewers by clearly stating the problem they're facing and promise a solution.\n`;
+                            } else if (section === 'Overview') {
+                                prompt += `Brief roadmap of what you'll cover. Set expectations for what they'll learn.\n`;
+                            } else if (section === 'Step-by-Step Guide') {
+                                prompt += `Clear, numbered steps. Each step should be actionable and specific.\n`;
+                            } else if (section === 'Pro Tips') {
+                                prompt += `Share insider knowledge that separates beginners from experts.\n`;
+                            } else if (section === 'Common Mistakes') {
+                                prompt += `What pitfalls should viewers avoid? Save them time and frustration.\n`;
+                            } else if (section === 'Recap') {
+                                prompt += `Quick summary of all steps. Encourage viewers to try it themselves.\n`;
+                            }
+                            break;
+                        case 'listicle':
+                            if (section === 'Hook') {
+                                prompt += `Tease the best item or make a bold claim about your list.\n`;
+                            } else if (section === 'List Overview') {
+                                prompt += `Briefly explain your criteria and what makes this list special.\n`;
+                            } else if (section === 'Items with Commentary') {
+                                prompt += `Each item gets its moment. Include why it's on the list and your personal take.\n`;
+                            } else if (section === 'Honorable Mentions') {
+                                prompt += `Quick shoutouts to items that almost made the cut.\n`;
+                            } else if (section === 'Winner/Conclusion') {
+                                prompt += `Reveal #1 with fanfare. Explain why it tops the list.\n`;
+                            }
+                            break;
+                        case 'story':
+                            if (section === 'Opening Scene') {
+                                prompt += `Drop viewers into a pivotal moment. Create immediate intrigue or tension.\n`;
+                            } else if (section === 'Character/Setting') {
+                                prompt += `Introduce the key players and the world they inhabit.\n`;
+                            } else if (section === 'Rising Action') {
+                                prompt += `Build tension. What challenges, conflicts, or mysteries unfold?\n`;
+                            } else if (section === 'Climax') {
+                                prompt += `The peak of your story. Maximum tension, emotion, or revelation.\n`;
+                            } else if (section === 'Resolution') {
+                                prompt += `How does it end? What happened to the characters/situation?\n`;
+                            } else if (section === 'Reflection') {
+                                prompt += `What does this story mean? What can we learn from it?\n`;
+                            }
+                            break;
+                        default:
+                            prompt += `Develop this section with compelling content appropriate for ${template.name} format.\n`;
+                    }
+
+                    prompt += `**Segments:** ${sectionSegments} | **Target Time:** ~${Math.round((parseInt(duration) / parseInt(pauseMarkers)) * sectionSegments)}s\n\n`;
+
+                    for (let i = 0; i < sectionSegments && segmentIndex <= parseInt(pauseMarkers); i++) {
+                        prompt += `[SEGMENT ${segmentIndex}]\n\n`;
+                        segmentIndex++;
+                    }
+                }
+            });
+
+            // Call to Action
+            prompt += `### CALL TO ACTION\n`;
+            prompt += `End with the channel's signature CTA, delivered naturally:\n`;
+            prompt += `"${profile.cta}"\n\n`;
+
+            // Writing Guidelines
+            prompt += `## WRITING GUIDELINES\n\n`;
+
+            prompt += `### Voice & Style\n`;
+            prompt += `- **Tone:** ${profile.tone}\n`;
+            prompt += `- **Perspective:** ${template.tone}\n`;
+            prompt += `- **Language Level:** Appropriate for ${audienceInfo.label}\n`;
+            prompt += `- **Content Depth:** ${contentDepth}\n\n`;
+
+            prompt += `### Pacing & Engagement\n`;
+            prompt += `- Open STRONG—you have 3 seconds to hook viewers\n`;
+            prompt += `- Vary sentence length: short punchy sentences for impact, longer ones for explanation\n`;
+            prompt += `- Use rhetorical questions to maintain engagement\n`;
+            prompt += `- Include "pattern interrupts" every 30-45 seconds (surprising facts, callbacks, tonal shifts)\n`;
+            prompt += `- Write for the EAR, not the eye—read aloud to test flow\n\n`;
+
+            if (profile.verifiability === 'Factual/Historical') {
+                prompt += `### Factual Standards\n`;
+                prompt += `- All claims must be accurate and verifiable\n`;
+                prompt += `- Include specific details: dates, names, numbers, locations\n`;
+                prompt += `- Attribute sources naturally in narration\n`;
+                prompt += `- Distinguish between established facts and interpretation\n`;
+                prompt += `- Avoid speculation presented as fact\n\n`;
+            } else {
+                prompt += `### Creative Storytelling\n`;
+                prompt += `- Prioritize compelling narrative over strict accuracy\n`;
+                prompt += `- Use vivid sensory descriptions\n`;
+                prompt += `- Build emotional resonance and dramatic tension\n`;
+                prompt += `- Creative interpretation is encouraged\n`;
+                prompt += `- Clearly signal when speculating or dramatizing\n\n`;
+            }
+
+            // Additional instructions
+            if (additionalInstructions && additionalInstructions.trim()) {
+                prompt += `## ADDITIONAL INSTRUCTIONS\n`;
+                prompt += `${additionalInstructions}\n\n`;
+            }
+
+            // Output requirements
+            prompt += `## REQUIRED OUTPUT\n\n`;
+            prompt += `Please provide:\n\n`;
+            prompt += `### 1. COMPLETE SCRIPT\n`;
+            prompt += `Full narration text with clear paragraph breaks between segments. Mark each segment with [SEGMENT X] for clarity.\n\n`;
+
+            prompt += `### 2. TIMING BREAKDOWN\n`;
+            prompt += `| Section | Duration | Word Count |\n`;
+            prompt += `|---------|----------|------------|\n`;
+            prompt += `(Fill in estimated times for each major section)\n\n`;
+
+            if (includeImagePrompts) {
+                prompt += `### 3. IMAGE/VISUAL PROMPTS\n`;
+                prompt += `For each segment, provide a detailed AI image generation prompt (for Midjourney/DALL-E/Stable Diffusion):\n`;
+                prompt += `- Style: Consistent visual style throughout\n`;
+                prompt += `- Composition: Describe framing, perspective, lighting\n`;
+                prompt += `- Mood: Match the emotional tone of the narration\n`;
+                prompt += `- Details: Specific elements to include\n\n`;
+            }
+
+            if (includeSEO) {
+                prompt += `### 4. SEO OPTIMIZATION\n`;
+                prompt += `**Title Options** (3 variations, under 60 characters, include main keyword):\n`;
+                prompt += `1. [Curiosity-driven title]\n`;
+                prompt += `2. [Benefit-driven title]\n`;
+                prompt += `3. [Controversy/bold claim title]\n\n`;
+                prompt += `**Description** (First 150 characters are crucial—include keyword naturally):\n`;
+                prompt += `[2-3 paragraph description with timestamps, links placeholder, and hashtags]\n\n`;
+                prompt += `**Tags** (15-20 relevant tags, mix of broad and specific):\n\n`;
+            }
+
+            if (includeThumbnail) {
+                prompt += `### 5. THUMBNAIL CONCEPTS\n`;
+                prompt += `Provide 3 thumbnail ideas:\n`;
+                prompt += `- **Concept 1:** [High-contrast, emotional face + 3 words max]\n`;
+                prompt += `- **Concept 2:** [Before/after or comparison visual]\n`;
+                prompt += `- **Concept 3:** [Intriguing object/scene with text overlay]\n\n`;
+                prompt += `For each: describe the image, text overlay, color scheme, and emotional hook.\n\n`;
+            }
+
+            prompt += `---\n\n`;
+            prompt += `Now write the complete YouTube script following all guidelines above. Remember: this will be converted to AI narration, so write for SPOKEN delivery.`;
+
+            return prompt;
+        };
+
+        // ============================================
+        // COMPONENTS
+        // ============================================
+
+        // Stats Card Component
+        function StatCard({ icon, label, value, subtext }) {
+            return (
+                <div className="p-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50">
+                    <div className="flex items-center gap-3">
+                        <span className="text-2xl">{icon}</span>
+                        <div>
+                            <p className="text-xs text-zinc-500 uppercase tracking-wider">{label}</p>
+                            <p className="text-xl font-bold text-white">{value}</p>
+                            {subtext && <p className="text-xs text-zinc-400">{subtext}</p>}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Toggle Component
+        function Toggle({ checked, onChange, label }) {
+            return (
+                <label className="flex items-center gap-3 cursor-pointer group">
+                    <div className={`relative w-11 h-6 rounded-full transition-colors ${checked ? 'bg-indigo-500' : 'bg-zinc-700'}`}>
+                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </div>
+                    <span className="text-sm text-zinc-300 group-hover:text-white transition-colors">{label}</span>
+                </label>
+            );
+        }
+
+        // Section Toggle Component
+        function SectionToggle({ sections, template, onChange }) {
+            const templateSections = SCRIPT_TEMPLATES[template]?.structure || [];
+
+            return (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {templateSections.map((section) => {
+                        const key = section.toLowerCase().replace(/[^a-z]/g, '_');
+                        const isEnabled = sections[key] !== false;
+
+                        return (
+                            <label
+                                key={key}
+                                className={`flex items-center gap-2 p-3 rounded-lg cursor-pointer transition-all ${
+                                    isEnabled
+                                        ? 'bg-indigo-500/20 border border-indigo-500/50'
+                                        : 'bg-zinc-800/50 border border-zinc-700/50 opacity-60'
+                                }`}
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={isEnabled}
+                                    onChange={(e) => onChange({ ...sections, [key]: e.target.checked })}
+                                    className="w-4 h-4 rounded accent-indigo-500"
+                                />
+                                <span className="text-sm">{section}</span>
+                            </label>
+                        );
+                    })}
+                </div>
+            );
+        }
+
+        // Profile Card Component
+        function ProfileCard({ profile, isSelected, onSelect, onDelete }) {
+            return (
+                <div
+                    onClick={onSelect}
+                    className={`p-4 rounded-xl cursor-pointer transition-all card-hover ${
+                        isSelected ? 'ring-2 ring-indigo-500 bg-indigo-500/10' : 'bg-zinc-800/50'
+                    } border border-zinc-700/50`}
+                >
+                    <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-semibold text-white">{profile.name}</h3>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                            className="text-zinc-500 hover:text-red-400 transition-colors p-1"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                        <span className="badge bg-indigo-500/20 text-indigo-300">{profile.genre}</span>
+                        <span className="badge bg-zinc-700 text-zinc-300">{profile.verifiability}</span>
+                    </div>
+                    <p className="text-xs text-zinc-400 line-clamp-2">{profile.tone}</p>
+                </div>
+            );
+        }
+
+        // Video Format Selector
+        function VideoFormatSelector({ selected, onChange }) {
+            return (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {Object.entries(VIDEO_FORMATS).map(([key, format]) => (
+                        <button
+                            key={key}
+                            onClick={() => onChange(key)}
+                            className={`p-4 rounded-xl text-left transition-all ${
+                                selected === key
+                                    ? 'bg-indigo-500/20 border-2 border-indigo-500'
+                                    : 'bg-zinc-800/50 border border-zinc-700/50 hover:border-zinc-600'
+                            }`}
+                        >
+                            <div className="flex items-center gap-3 mb-2">
+                                <span className="text-2xl">{format.icon}</span>
+                                <div>
+                                    <h4 className="font-semibold text-white">{format.name}</h4>
+                                    <p className="text-xs text-zinc-400">{formatDuration(format.duration)} default</p>
+                                </div>
+                            </div>
+                            <p className="text-xs text-zinc-500">{format.description}</p>
+                        </button>
+                    ))}
+                </div>
+            );
+        }
+
+        // Script Template Selector
+        function ScriptTemplateSelector({ selected, onChange }) {
+            return (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {Object.entries(SCRIPT_TEMPLATES).map(([key, template]) => (
+                        <button
+                            key={key}
+                            onClick={() => onChange(key)}
+                            className={`p-3 rounded-lg text-left transition-all ${
+                                selected === key
+                                    ? 'bg-indigo-500 text-white'
+                                    : 'bg-zinc-800/50 border border-zinc-700/50 hover:bg-zinc-700/50'
+                            }`}
+                        >
+                            <h4 className="font-medium text-sm">{template.name}</h4>
+                            <p className={`text-xs mt-1 ${selected === key ? 'text-indigo-200' : 'text-zinc-500'}`}>
+                                {template.description}
+                            </p>
+                        </button>
+                    ))}
+                </div>
+            );
+        }
+
+        // ============================================
+        // MAIN APP
+        // ============================================
+
+        function App() {
+            // State
+            const [profiles, setProfiles] = useState([]);
+            const [selectedProfile, setSelectedProfile] = useState(null);
+            const [showNewProfile, setShowNewProfile] = useState(false);
+            const [generatedPrompt, setGeneratedPrompt] = useState('');
+            const [copied, setCopied] = useState(false);
+            const [activeTab, setActiveTab] = useState('generate');
+            const [history, setHistory] = useState([]);
+
+            // Profile form
+            const [profileForm, setProfileForm] = useState({
+                name: '',
+                genre: 'Documentary',
+                tone: '',
+                cta: '',
+                verifiability: 'Factual/Historical'
+            });
+
+            // Prompt config
+            const [config, setConfig] = useState({
+                topic: '',
+                videoFormat: 'standard',
+                duration: '480',
+                scriptTemplate: 'documentary',
+                sections: {},
+                pauseMarkers: '12',
+                audience: 'general',
+                contentDepth: 'Moderate detail with examples',
+                additionalInstructions: '',
+                includeImagePrompts: true,
+                includeSEO: true,
+                includeThumbnail: true
+            });
+
+            // Quick profile for users without saved profiles
+            const [quickProfile, setQuickProfile] = useState({
+                name: 'My Channel',
+                genre: 'Educational',
+                tone: 'Engaging, informative, and conversational with moments of humor',
+                cta: 'If you learned something new, hit that subscribe button and ring the bell for more videos like this!',
+                verifiability: 'Factual/Historical'
+            });
+
+            // Load data on mount
+            useEffect(() => {
+                setProfiles(storage.getProfiles());
+                setHistory(storage.getHistory());
+            }, []);
+
+            // Update duration when format changes
+            useEffect(() => {
+                const format = VIDEO_FORMATS[config.videoFormat];
+                setConfig(prev => ({
+                    ...prev,
+                    duration: String(format.duration),
+                    pauseMarkers: String(format.pauseMarkers)
+                }));
+            }, [config.videoFormat]);
+
+            // Computed values
+            const estimatedWords = useMemo(() =>
+                estimateWordCount(parseInt(config.duration) || 0),
+                [config.duration]
+            );
+
+            const activeProfile = selectedProfile || quickProfile;
+
+            // Handlers
+            const handleSaveProfile = () => {
+                if (!profileForm.name || !profileForm.tone || !profileForm.cta) return;
+
+                const newProfile = {
+                    ...profileForm,
+                    id: Date.now().toString(),
+                    createdAt: new Date().toISOString()
+                };
+
+                const updatedProfiles = [...profiles, newProfile];
+                setProfiles(updatedProfiles);
+                storage.saveProfiles(updatedProfiles);
+                setSelectedProfile(newProfile);
+                setShowNewProfile(false);
+                setProfileForm({ name: '', genre: 'Documentary', tone: '', cta: '', verifiability: 'Factual/Historical' });
+            };
+
+            const handleDeleteProfile = (id) => {
+                if (!confirm('Delete this profile?')) return;
+                const updatedProfiles = profiles.filter(p => p.id !== id);
+                setProfiles(updatedProfiles);
+                storage.saveProfiles(updatedProfiles);
+                if (selectedProfile?.id === id) setSelectedProfile(null);
+            };
+
+            const handleGenerate = () => {
+                if (!config.topic.trim()) return;
+
+                const prompt = generatePrompt(activeProfile, config);
+                setGeneratedPrompt(prompt);
+
+                // Add to history
+                storage.addToHistory({
+                    topic: config.topic,
+                    profile: activeProfile.name,
+                    format: VIDEO_FORMATS[config.videoFormat].name,
+                    template: SCRIPT_TEMPLATES[config.scriptTemplate].name
+                });
+                setHistory(storage.getHistory());
+            };
+
+            const handleCopy = async () => {
+                const success = await copyToClipboard(generatedPrompt);
+                if (success) {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                }
+            };
+
+            const handleDownload = () => {
+                const filename = `script-prompt-${config.topic.slice(0, 30).replace(/[^a-z0-9]/gi, '-')}.txt`;
+                downloadAsFile(generatedPrompt, filename);
+            };
+
+            return (
+                <div className="min-h-screen">
+                    {/* Header */}
+                    <header className="border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-50">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="flex items-center justify-between h-16">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                                        <span className="text-xl">⚡</span>
+                                    </div>
+                                    <div>
+                                        <h1 className="text-xl font-bold text-white">Script Forge</h1>
+                                        <p className="text-xs text-zinc-500">AI YouTube Script Generator</p>
+                                    </div>
+                                </div>
+
+                                {/* Tabs */}
+                                <div className="flex gap-1 bg-zinc-800/50 p-1 rounded-lg">
+                                    {[
+                                        { id: 'generate', label: 'Generate' },
+                                        { id: 'profiles', label: 'Profiles' },
+                                        { id: 'history', label: 'History' }
+                                    ].map(tab => (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => setActiveTab(tab.id)}
+                                            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                                                activeTab === tab.id ? 'tab-active' : 'tab-inactive'
+                                            }`}
+                                        >
+                                            {tab.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                        {/* Generate Tab */}
+                        {activeTab === 'generate' && (
+                            <div className="space-y-8 animate-fade-in">
+                                {/* Quick Stats */}
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <StatCard
+                                        icon="🎬"
+                                        label="Video Format"
+                                        value={VIDEO_FORMATS[config.videoFormat].name}
+                                        subtext={formatDuration(parseInt(config.duration))}
+                                    />
+                                    <StatCard
+                                        icon="📝"
+                                        label="Est. Words"
+                                        value={`~${estimatedWords}`}
+                                        subtext={`${WORDS_PER_MINUTE} wpm narration`}
+                                    />
+                                    <StatCard
+                                        icon="🖼️"
+                                        label="Image Segments"
+                                        value={config.pauseMarkers}
+                                        subtext={`~${Math.round(parseInt(config.duration) / parseInt(config.pauseMarkers))}s each`}
+                                    />
+                                    <StatCard
+                                        icon="👤"
+                                        label="Using Profile"
+                                        value={activeProfile.name}
+                                        subtext={activeProfile.genre}
+                                    />
+                                </div>
+
+                                {/* Topic Input */}
+                                <div className="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800">
+                                    <label className="block text-sm font-medium text-zinc-300 mb-2">
+                                        Video Topic / Title *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={config.topic}
+                                        onChange={(e) => setConfig({ ...config, topic: e.target.value })}
+                                        placeholder="e.g., The Hidden History of the Roman Empire's Most Dangerous Roads"
+                                        className="w-full px-4 py-4 rounded-xl bg-zinc-800 border border-zinc-700 text-white text-lg placeholder-zinc-500 input-focus"
+                                    />
+                                </div>
+
+                                {/* Video Format */}
+                                <div className="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800">
+                                    <h3 className="text-lg font-semibold text-white mb-4">Video Format</h3>
+                                    <VideoFormatSelector
+                                        selected={config.videoFormat}
+                                        onChange={(format) => setConfig({ ...config, videoFormat: format })}
+                                    />
+
+                                    {/* Custom Duration */}
+                                    <div className="mt-4 grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-zinc-400 mb-2">
+                                                Custom Duration (seconds)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                value={config.duration}
+                                                onChange={(e) => setConfig({ ...config, duration: e.target.value })}
+                                                min="30"
+                                                max="3600"
+                                                className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white input-focus"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-zinc-400 mb-2">
+                                                Image/Scene Segments
+                                            </label>
+                                            <input
+                                                type="number"
+                                                value={config.pauseMarkers}
+                                                onChange={(e) => setConfig({ ...config, pauseMarkers: e.target.value })}
+                                                min="3"
+                                                max="50"
+                                                className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white input-focus"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Script Template */}
+                                <div className="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800">
+                                    <h3 className="text-lg font-semibold text-white mb-4">Script Template</h3>
+                                    <ScriptTemplateSelector
+                                        selected={config.scriptTemplate}
+                                        onChange={(template) => setConfig({ ...config, scriptTemplate: template, sections: {} })}
+                                    />
+
+                                    {/* Section Toggles */}
+                                    <div className="mt-6">
+                                        <h4 className="text-sm font-medium text-zinc-400 mb-3">Include Sections:</h4>
+                                        <SectionToggle
+                                            sections={config.sections}
+                                            template={config.scriptTemplate}
+                                            onChange={(sections) => setConfig({ ...config, sections })}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Audience & Depth */}
+                                <div className="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800">
+                                    <h3 className="text-lg font-semibold text-white mb-4">Audience & Content</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-sm font-medium text-zinc-400 mb-2">
+                                                Target Audience
+                                            </label>
+                                            <select
+                                                value={config.audience}
+                                                onChange={(e) => setConfig({ ...config, audience: e.target.value })}
+                                                className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white input-focus"
+                                            >
+                                                {AUDIENCE_TYPES.map(aud => (
+                                                    <option key={aud.value} value={aud.value}>{aud.label}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-zinc-400 mb-2">
+                                                Content Depth
+                                            </label>
+                                            <select
+                                                value={config.contentDepth}
+                                                onChange={(e) => setConfig({ ...config, contentDepth: e.target.value })}
+                                                className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white input-focus"
+                                            >
+                                                <option>Surface-level overview</option>
+                                                <option>Moderate detail with examples</option>
+                                                <option>Deep dive with analysis</option>
+                                                <option>Expert-level comprehensive</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Output Options */}
+                                <div className="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800">
+                                    <h3 className="text-lg font-semibold text-white mb-4">Output Options</h3>
+                                    <div className="flex flex-wrap gap-6">
+                                        <Toggle
+                                            checked={config.includeImagePrompts}
+                                            onChange={(checked) => setConfig({ ...config, includeImagePrompts: checked })}
+                                            label="AI Image Prompts"
+                                        />
+                                        <Toggle
+                                            checked={config.includeSEO}
+                                            onChange={(checked) => setConfig({ ...config, includeSEO: checked })}
+                                            label="SEO (Title, Description, Tags)"
+                                        />
+                                        <Toggle
+                                            checked={config.includeThumbnail}
+                                            onChange={(checked) => setConfig({ ...config, includeThumbnail: checked })}
+                                            label="Thumbnail Ideas"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Additional Instructions */}
+                                <div className="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800">
+                                    <label className="block text-sm font-medium text-zinc-300 mb-2">
+                                        Additional Instructions (Optional)
+                                    </label>
+                                    <textarea
+                                        value={config.additionalInstructions}
+                                        onChange={(e) => setConfig({ ...config, additionalInstructions: e.target.value })}
+                                        placeholder="Any specific requirements, style notes, topics to avoid, etc..."
+                                        rows={3}
+                                        className="w-full px-4 py-3 rounded-xl bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 input-focus resize-none"
+                                    />
+                                </div>
+
+                                {/* Quick Profile (if no profile selected) */}
+                                {!selectedProfile && (
+                                    <div className="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <span className="text-amber-400">⚠️</span>
+                                            <h3 className="text-lg font-semibold text-amber-300">Quick Profile</h3>
+                                            <span className="text-xs text-amber-400/70">(or select a saved profile in Profiles tab)</span>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-zinc-400 mb-2">Channel Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={quickProfile.name}
+                                                    onChange={(e) => setQuickProfile({ ...quickProfile, name: e.target.value })}
+                                                    className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white input-focus"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-zinc-400 mb-2">Genre</label>
+                                                <select
+                                                    value={quickProfile.genre}
+                                                    onChange={(e) => setQuickProfile({ ...quickProfile, genre: e.target.value })}
+                                                    className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white input-focus"
+                                                >
+                                                    {CONTENT_GENRES.map(g => <option key={g}>{g}</option>)}
+                                                </select>
+                                            </div>
+                                            <div className="md:col-span-2">
+                                                <label className="block text-sm font-medium text-zinc-400 mb-2">Tone & Voice</label>
+                                                <input
+                                                    type="text"
+                                                    value={quickProfile.tone}
+                                                    onChange={(e) => setQuickProfile({ ...quickProfile, tone: e.target.value })}
+                                                    className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white input-focus"
+                                                    placeholder="e.g., Authoritative yet approachable, with dry humor"
+                                                />
+                                            </div>
+                                            <div className="md:col-span-2">
+                                                <label className="block text-sm font-medium text-zinc-400 mb-2">Call to Action</label>
+                                                <input
+                                                    type="text"
+                                                    value={quickProfile.cta}
+                                                    onChange={(e) => setQuickProfile({ ...quickProfile, cta: e.target.value })}
+                                                    className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white input-focus"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-zinc-400 mb-2">Content Type</label>
+                                                <select
+                                                    value={quickProfile.verifiability}
+                                                    onChange={(e) => setQuickProfile({ ...quickProfile, verifiability: e.target.value })}
+                                                    className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white input-focus"
+                                                >
+                                                    <option>Factual/Historical</option>
+                                                    <option>Fictional/Creative</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Generate Button */}
+                                <button
+                                    onClick={handleGenerate}
+                                    disabled={!config.topic.trim()}
+                                    className="w-full py-4 rounded-xl font-bold text-lg btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                                >
+                                    <span>⚡</span>
+                                    GENERATE SCRIPT PROMPT
+                                </button>
+
+                                {/* Generated Output */}
+                                {generatedPrompt && (
+                                    <div className="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800 animate-fade-in">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="text-lg font-semibold text-white">Generated Prompt</h3>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={handleDownload}
+                                                    className="px-4 py-2 rounded-lg btn-secondary text-sm font-medium flex items-center gap-2"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                    </svg>
+                                                    Download
+                                                </button>
+                                                <button
+                                                    onClick={handleCopy}
+                                                    className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all ${
+                                                        copied
+                                                            ? 'bg-green-500 text-white'
+                                                            : 'btn-primary'
+                                                    }`}
+                                                >
+                                                    {copied ? (
+                                                        <>
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                            Copied!
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                                            </svg>
+                                                            Copy to Clipboard
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 max-h-[500px] overflow-auto custom-scrollbar">
+                                            <pre className="whitespace-pre-wrap text-sm text-zinc-300 mono">{generatedPrompt}</pre>
+                                        </div>
+
+                                        <p className="mt-4 text-sm text-zinc-500">
+                                            Copy this prompt and paste it into ChatGPT, Claude, or your preferred AI to generate your YouTube script.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Profiles Tab */}
+                        {activeTab === 'profiles' && (
+                            <div className="space-y-6 animate-fade-in">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-white">Channel Profiles</h2>
+                                        <p className="text-zinc-400">Save your channel settings for quick access</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowNewProfile(!showNewProfile)}
+                                        className="px-4 py-2 rounded-lg btn-primary font-medium"
+                                    >
+                                        {showNewProfile ? 'Cancel' : '+ New Profile'}
+                                    </button>
+                                </div>
+
+                                {/* New Profile Form */}
+                                {showNewProfile && (
+                                    <div className="p-6 rounded-2xl bg-zinc-900/50 border border-indigo-500/50 animate-fade-in">
+                                        <h3 className="text-lg font-semibold text-white mb-4">Create New Profile</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-zinc-400 mb-2">Channel Name *</label>
+                                                <input
+                                                    type="text"
+                                                    value={profileForm.name}
+                                                    onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                                                    className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white input-focus"
+                                                    placeholder="e.g., History Uncovered"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-zinc-400 mb-2">Genre</label>
+                                                <select
+                                                    value={profileForm.genre}
+                                                    onChange={(e) => setProfileForm({ ...profileForm, genre: e.target.value })}
+                                                    className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white input-focus"
+                                                >
+                                                    {CONTENT_GENRES.map(g => <option key={g}>{g}</option>)}
+                                                </select>
+                                            </div>
+                                            <div className="md:col-span-2">
+                                                <label className="block text-sm font-medium text-zinc-400 mb-2">Tone & Voice *</label>
+                                                <textarea
+                                                    value={profileForm.tone}
+                                                    onChange={(e) => setProfileForm({ ...profileForm, tone: e.target.value })}
+                                                    className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white input-focus resize-none"
+                                                    rows={2}
+                                                    placeholder="e.g., Authoritative yet accessible, with dry British humor. Think David Attenborough meets a history professor."
+                                                />
+                                            </div>
+                                            <div className="md:col-span-2">
+                                                <label className="block text-sm font-medium text-zinc-400 mb-2">Call to Action *</label>
+                                                <input
+                                                    type="text"
+                                                    value={profileForm.cta}
+                                                    onChange={(e) => setProfileForm({ ...profileForm, cta: e.target.value })}
+                                                    className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white input-focus"
+                                                    placeholder="e.g., Subscribe for more hidden history, and let me know in the comments..."
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-zinc-400 mb-2">Content Type</label>
+                                                <select
+                                                    value={profileForm.verifiability}
+                                                    onChange={(e) => setProfileForm({ ...profileForm, verifiability: e.target.value })}
+                                                    className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white input-focus"
+                                                >
+                                                    <option>Factual/Historical</option>
+                                                    <option>Fictional/Creative</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={handleSaveProfile}
+                                            disabled={!profileForm.name || !profileForm.tone || !profileForm.cta}
+                                            className="mt-4 px-6 py-3 rounded-lg bg-green-500 text-white font-medium hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            Save Profile
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Profile Grid */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {profiles.map(profile => (
+                                        <ProfileCard
+                                            key={profile.id}
+                                            profile={profile}
+                                            isSelected={selectedProfile?.id === profile.id}
+                                            onSelect={() => {
+                                                setSelectedProfile(profile);
+                                                setActiveTab('generate');
+                                            }}
+                                            onDelete={() => handleDeleteProfile(profile.id)}
+                                        />
+                                    ))}
+
+                                    {profiles.length === 0 && !showNewProfile && (
+                                        <div className="col-span-full text-center py-12">
+                                            <div className="text-4xl mb-4">📺</div>
+                                            <h3 className="text-lg font-semibold text-white mb-2">No profiles yet</h3>
+                                            <p className="text-zinc-400 mb-4">Create your first channel profile to save your settings</p>
+                                            <button
+                                                onClick={() => setShowNewProfile(true)}
+                                                className="px-6 py-3 rounded-lg btn-primary font-medium"
+                                            >
+                                                Create First Profile
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* History Tab */}
+                        {activeTab === 'history' && (
+                            <div className="space-y-6 animate-fade-in">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-white">Generation History</h2>
+                                    <p className="text-zinc-400">Your recent prompt generations</p>
+                                </div>
+
+                                {history.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {history.map((item, idx) => (
+                                            <div
+                                                key={item.id}
+                                                className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 flex items-center justify-between"
+                                            >
+                                                <div>
+                                                    <h4 className="font-medium text-white">{item.topic}</h4>
+                                                    <div className="flex gap-2 mt-1">
+                                                        <span className="badge bg-zinc-700 text-zinc-300">{item.format}</span>
+                                                        <span className="badge bg-zinc-700 text-zinc-300">{item.template}</span>
+                                                        <span className="text-xs text-zinc-500">{item.profile}</span>
+                                                    </div>
+                                                </div>
+                                                <span className="text-xs text-zinc-500">
+                                                    {new Date(item.timestamp).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-12">
+                                        <div className="text-4xl mb-4">📜</div>
+                                        <h3 className="text-lg font-semibold text-white mb-2">No history yet</h3>
+                                        <p className="text-zinc-400">Generate your first prompt to see it here</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Footer */}
+                    <footer className="border-t border-zinc-800 mt-12 py-6">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-zinc-500">
+                            Script Forge Pro — AI-Powered YouTube Script Generation
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
