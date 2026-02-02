@@ -411,6 +411,15 @@
 
             clearHistory() {
                 return this.set('history', []);
+            },
+
+            // Settings
+            getSettings() {
+                return this.get('settings') || { apiKey: '', apiProvider: 'openai', compactMode: true };
+            },
+
+            saveSettings(settings) {
+                return this.set('settings', settings);
             }
         };
 
@@ -703,6 +712,56 @@
             return prompt;
         };
 
+        // Compact prompt generator - minimal tokens, same output quality
+        const generateCompactPrompt = (profile, config) => {
+            const { topic, duration, videoFormat, scriptTemplate, pauseMarkers, audience, contentDepth, additionalInstructions, includeImagePrompts, includeSEO, includeThumbnail, includeSponsor } = config;
+            const template = SCRIPT_TEMPLATES[scriptTemplate];
+            const wordCount = estimateWordCount(parseInt(duration));
+            const segments = parseInt(pauseMarkers);
+
+            let p = `Write a ${formatDuration(parseInt(duration))} YouTube script (~${wordCount} words, ${segments} segments).
+
+TOPIC: ${topic}
+STYLE: ${template.name} | TONE: ${profile.tone}
+CHANNEL: ${profile.name} (${profile.genre}) | AUDIENCE: ${AUDIENCE_TYPES.find(a => a.value === audience)?.label}
+DEPTH: ${contentDepth} | TYPE: ${profile.verifiability}
+
+STRUCTURE: ${template.structure.join(' → ')}
+
+RULES:
+- Double line breaks = image transitions (exactly ${segments} segments)
+- Write for TTS narration, no visual references
+- [brackets] for pronunciations
+- Numbers as words except dates/stats${includeSponsor ? '\n- Include natural sponsor break at ~50% mark' : ''}
+${additionalInstructions ? `\nNOTES: ${additionalInstructions}` : ''}
+
+CTA: "${profile.cta}"
+
+OUTPUT:`;
+
+            if (includeImagePrompts) p += `\n- Script with [SEGMENT X] markers + image prompts per segment`;
+            else p += `\n- Script with [SEGMENT X] markers`;
+            if (includeSEO) p += `\n- 3 title options + description + tags`;
+            if (includeThumbnail) p += `\n- 3 thumbnail concepts`;
+
+            return p;
+        };
+
+        // Simple markdown renderer
+        const renderMarkdown = (text) => {
+            if (!text) return '';
+            return text
+                .replace(/^### (.+)$/gm, '<h3 class="text-lg font-bold text-white mt-4 mb-2">$1</h3>')
+                .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold text-white mt-6 mb-3">$1</h2>')
+                .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold text-white mt-6 mb-4">$1</h1>')
+                .replace(/\*\*(.+?)\*\*/g, '<strong class="text-white">$1</strong>')
+                .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                .replace(/\[SEGMENT (\d+)\]/g, '<span class="inline-block px-2 py-1 bg-indigo-500/20 text-indigo-300 rounded text-xs font-mono my-2">SEGMENT $1</span>')
+                .replace(/^- (.+)$/gm, '<li class="ml-4">$1</li>')
+                .replace(/\n\n/g, '</p><p class="my-3">')
+                .replace(/\n/g, '<br/>');
+        };
+
         // ============================================
         // COMPONENTS
         // ============================================
@@ -867,6 +926,12 @@
             const [activeTab, setActiveTab] = useState('generate');
             const [history, setHistory] = useState([]);
 
+            // Settings & AI state
+            const [settings, setSettings] = useState({ apiKey: '', apiProvider: 'openai', compactMode: true });
+            const [generatedScript, setGeneratedScript] = useState('');
+            const [isGenerating, setIsGenerating] = useState(false);
+            const [streamingText, setStreamingText] = useState('');
+
             // Profile form
             const [profileForm, setProfileForm] = useState({
                 name: '',
@@ -888,6 +953,7 @@
                 contentDepth: 'Moderate detail with examples',
                 additionalInstructions: '',
                 includeImagePrompts: true,
+                includeSponsor: false,
                 includeSEO: true,
                 includeThumbnail: true
             });
@@ -896,6 +962,7 @@
             useEffect(() => {
                 setProfiles(storage.getProfiles());
                 setHistory(storage.getHistory());
+                setSettings(storage.getSettings());
             }, []);
 
             // Update duration when format changes
@@ -945,8 +1012,12 @@
             const handleGenerate = () => {
                 if (!config.topic.trim() || !selectedProfile) return;
 
-                const prompt = generatePrompt(selectedProfile, config);
+                // Use compact or full prompt based on settings
+                const prompt = settings.compactMode
+                    ? generateCompactPrompt(selectedProfile, config)
+                    : generatePrompt(selectedProfile, config);
                 setGeneratedPrompt(prompt);
+                setGeneratedScript(''); // Clear any previous script
 
                 // Add to history
                 storage.addToHistory({
@@ -956,6 +1027,79 @@
                     template: SCRIPT_TEMPLATES[config.scriptTemplate].name
                 });
                 setHistory(storage.getHistory());
+            };
+
+            // AI Script Generation with streaming
+            const handleGenerateScript = async () => {
+                if (!generatedPrompt || !settings.apiKey) {
+                    alert('Please add your API key in Settings first.');
+                    return;
+                }
+
+                setIsGenerating(true);
+                setStreamingText('');
+                setGeneratedScript('');
+
+                try {
+                    const isOpenAI = settings.apiProvider === 'openai';
+                    const endpoint = isOpenAI
+                        ? 'https://api.openai.com/v1/chat/completions'
+                        : 'https://api.anthropic.com/v1/messages';
+
+                    const headers = {
+                        'Content-Type': 'application/json',
+                        ...(isOpenAI
+                            ? { 'Authorization': `Bearer ${settings.apiKey}` }
+                            : { 'x-api-key': settings.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' })
+                    };
+
+                    const body = isOpenAI
+                        ? { model: 'gpt-4o', messages: [{ role: 'user', content: generatedPrompt }], stream: true }
+                        : { model: 'claude-sonnet-4-20250514', max_tokens: 8000, messages: [{ role: 'user', content: generatedPrompt }], stream: true };
+
+                    const response = await fetch(endpoint, { method: 'POST', headers, body: JSON.stringify(body) });
+
+                    if (!response.ok) {
+                        const err = await response.text();
+                        throw new Error(`API Error: ${response.status} - ${err}`);
+                    }
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let fullText = '';
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+
+                        const chunk = decoder.decode(value);
+                        const lines = chunk.split('\n').filter(line => line.startsWith('data: '));
+
+                        for (const line of lines) {
+                            const data = line.slice(6);
+                            if (data === '[DONE]') continue;
+                            try {
+                                const parsed = JSON.parse(data);
+                                const text = isOpenAI
+                                    ? parsed.choices?.[0]?.delta?.content || ''
+                                    : parsed.delta?.text || '';
+                                fullText += text;
+                                setStreamingText(fullText);
+                            } catch (e) { /* skip parse errors */ }
+                        }
+                    }
+                    setGeneratedScript(fullText);
+                } catch (error) {
+                    console.error('Generation error:', error);
+                    alert(`Error: ${error.message}`);
+                } finally {
+                    setIsGenerating(false);
+                }
+            };
+
+            const handleSaveSettings = (newSettings) => {
+                setSettings(newSettings);
+                storage.saveSettings(newSettings);
             };
 
             const handleDeleteHistory = (id) => {
@@ -969,8 +1113,8 @@
                 setHistory([]);
             };
 
-            const handleCopy = async () => {
-                const success = await copyToClipboard(generatedPrompt);
+            const handleCopy = async (text) => {
+                const success = await copyToClipboard(text || generatedPrompt);
                 if (success) {
                     setCopied(true);
                     setTimeout(() => setCopied(false), 2000);
@@ -1003,7 +1147,8 @@
                                     {[
                                         { id: 'generate', label: 'Generate' },
                                         { id: 'profiles', label: 'Profiles' },
-                                        { id: 'history', label: 'History' }
+                                        { id: 'history', label: 'History' },
+                                        { id: 'settings', label: 'Settings' }
                                     ].map(tab => (
                                         <button
                                             key={tab.id}
@@ -1179,6 +1324,11 @@
                                             onChange={(checked) => setConfig({ ...config, includeThumbnail: checked })}
                                             label="Thumbnail Ideas"
                                         />
+                                        <Toggle
+                                            checked={config.includeSponsor}
+                                            onChange={(checked) => setConfig({ ...config, includeSponsor: checked })}
+                                            label="Sponsor Segment"
+                                        />
                                     </div>
                                 </div>
 
@@ -1231,7 +1381,12 @@
                                 {generatedPrompt && (
                                     <div className="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800 animate-fade-in">
                                         <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-lg font-semibold text-white">Generated Prompt</h3>
+                                            <div className="flex items-center gap-3">
+                                                <h3 className="text-lg font-semibold text-white">Generated Prompt</h3>
+                                                {settings.compactMode && (
+                                                    <span className="px-2 py-1 text-xs bg-green-500/20 text-green-400 rounded">Compact Mode</span>
+                                                )}
+                                            </div>
                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={handleDownload}
@@ -1243,39 +1398,82 @@
                                                     Download
                                                 </button>
                                                 <button
-                                                    onClick={handleCopy}
+                                                    onClick={() => handleCopy()}
                                                     className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all ${
-                                                        copied
-                                                            ? 'bg-green-500 text-white'
-                                                            : 'btn-primary'
+                                                        copied ? 'bg-green-500 text-white' : 'btn-primary'
                                                     }`}
                                                 >
-                                                    {copied ? (
-                                                        <>
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                            </svg>
-                                                            Copied!
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                                                            </svg>
-                                                            Copy to Clipboard
-                                                        </>
-                                                    )}
+                                                    {copied ? 'Copied!' : 'Copy'}
                                                 </button>
                                             </div>
                                         </div>
 
-                                        <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 max-h-[500px] overflow-auto custom-scrollbar">
+                                        <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 max-h-[300px] overflow-auto custom-scrollbar">
                                             <pre className="whitespace-pre-wrap text-sm text-zinc-300 mono">{generatedPrompt}</pre>
                                         </div>
 
-                                        <p className="mt-4 text-sm text-zinc-500">
-                                            Copy this prompt and paste it into ChatGPT, Claude, or your preferred AI to generate your YouTube script.
-                                        </p>
+                                        {/* AI Generation Button */}
+                                        <div className="mt-4">
+                                            <button
+                                                onClick={handleGenerateScript}
+                                                disabled={isGenerating || !settings.apiKey}
+                                                className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all ${
+                                                    isGenerating
+                                                        ? 'bg-purple-600 text-white animate-pulse'
+                                                        : !settings.apiKey
+                                                            ? 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
+                                                            : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500'
+                                                }`}
+                                            >
+                                                {isGenerating ? (
+                                                    <><span className="animate-spin">⏳</span> Generating Script...</>
+                                                ) : !settings.apiKey ? (
+                                                    <><span>🔑</span> Add API Key in Settings</>
+                                                ) : (
+                                                    <><span>🚀</span> Generate Full Script with AI</>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* AI Generated Script Output */}
+                                {(streamingText || generatedScript) && (
+                                    <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-900/20 to-pink-900/20 border border-purple-500/30 animate-fade-in">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                                                <span>📜</span> AI Generated Script
+                                                {isGenerating && <span className="text-sm text-purple-400 animate-pulse">streaming...</span>}
+                                            </h3>
+                                            {generatedScript && (
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => downloadAsFile(generatedScript, `script-${config.topic.slice(0,20).replace(/[^a-z0-9]/gi,'-')}.txt`)}
+                                                        className="px-4 py-2 rounded-lg btn-secondary text-sm font-medium"
+                                                    >
+                                                        Download Script
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleCopy(generatedScript)}
+                                                        className="px-4 py-2 rounded-lg btn-primary text-sm font-medium"
+                                                    >
+                                                        Copy Script
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div
+                                            className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 max-h-[600px] overflow-auto custom-scrollbar prose prose-invert prose-sm max-w-none"
+                                            dangerouslySetInnerHTML={{ __html: renderMarkdown(streamingText || generatedScript) }}
+                                        />
+
+                                        {generatedScript && (
+                                            <div className="mt-4 flex items-center justify-between text-sm text-zinc-500">
+                                                <span>Word count: ~{generatedScript.split(/\s+/).length} words</span>
+                                                <span>Est. reading time: {Math.ceil(generatedScript.split(/\s+/).length / 150)} min</span>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -1453,6 +1651,119 @@
                                         <p className="text-zinc-400">Generate your first prompt to see it here</p>
                                     </div>
                                 )}
+                            </div>
+                        )}
+
+                        {/* Settings Tab */}
+                        {activeTab === 'settings' && (
+                            <div className="space-y-6 animate-fade-in">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-white">Settings</h2>
+                                    <p className="text-zinc-400">Configure AI integration and preferences</p>
+                                </div>
+
+                                {/* API Configuration */}
+                                <div className="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800">
+                                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                                        <span>🔑</span> API Configuration
+                                    </h3>
+
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-zinc-400 mb-2">
+                                                AI Provider
+                                            </label>
+                                            <div className="flex gap-4">
+                                                <button
+                                                    onClick={() => handleSaveSettings({ ...settings, apiProvider: 'openai' })}
+                                                    className={`flex-1 p-4 rounded-xl border transition-all ${
+                                                        settings.apiProvider === 'openai'
+                                                            ? 'bg-green-500/20 border-green-500 text-green-400'
+                                                            : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-600'
+                                                    }`}
+                                                >
+                                                    <div className="font-medium">OpenAI</div>
+                                                    <div className="text-xs opacity-70">GPT-4o</div>
+                                                </button>
+                                                <button
+                                                    onClick={() => handleSaveSettings({ ...settings, apiProvider: 'anthropic' })}
+                                                    className={`flex-1 p-4 rounded-xl border transition-all ${
+                                                        settings.apiProvider === 'anthropic'
+                                                            ? 'bg-orange-500/20 border-orange-500 text-orange-400'
+                                                            : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-600'
+                                                    }`}
+                                                >
+                                                    <div className="font-medium">Anthropic</div>
+                                                    <div className="text-xs opacity-70">Claude Sonnet</div>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-zinc-400 mb-2">
+                                                API Key
+                                            </label>
+                                            <input
+                                                type="password"
+                                                value={settings.apiKey}
+                                                onChange={(e) => handleSaveSettings({ ...settings, apiKey: e.target.value })}
+                                                placeholder={settings.apiProvider === 'openai' ? 'sk-...' : 'sk-ant-...'}
+                                                className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white input-focus mono"
+                                            />
+                                            <p className="mt-2 text-xs text-zinc-500">
+                                                Your API key is stored locally in your browser. Never shared.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Prompt Settings */}
+                                <div className="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800">
+                                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                                        <span>⚡</span> Prompt Settings
+                                    </h3>
+
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between p-4 rounded-xl bg-zinc-800/50 border border-zinc-700">
+                                            <div>
+                                                <div className="font-medium text-white">Compact Mode</div>
+                                                <div className="text-sm text-zinc-400">Use minimal tokens (60-70% fewer) while maintaining quality</div>
+                                            </div>
+                                            <Toggle
+                                                checked={settings.compactMode}
+                                                onChange={(checked) => handleSaveSettings({ ...settings, compactMode: checked })}
+                                                label=""
+                                            />
+                                        </div>
+
+                                        <div className="p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/30">
+                                            <div className="flex items-start gap-3">
+                                                <span className="text-xl">💡</span>
+                                                <div className="text-sm text-indigo-300">
+                                                    <strong>Token Usage Tip:</strong> Compact mode generates prompts that are ~60-70% smaller while producing the same quality scripts. Recommended for most use cases.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* API Status */}
+                                <div className="p-4 rounded-xl bg-zinc-800/50 border border-zinc-700 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-3 h-3 rounded-full ${settings.apiKey ? 'bg-green-500' : 'bg-zinc-500'}`} />
+                                        <span className="text-sm text-zinc-400">
+                                            {settings.apiKey ? `${settings.apiProvider === 'openai' ? 'OpenAI' : 'Anthropic'} API configured` : 'No API key configured'}
+                                        </span>
+                                    </div>
+                                    {settings.apiKey && (
+                                        <button
+                                            onClick={() => handleSaveSettings({ ...settings, apiKey: '' })}
+                                            className="text-sm text-red-400 hover:text-red-300"
+                                        >
+                                            Clear Key
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </main>
