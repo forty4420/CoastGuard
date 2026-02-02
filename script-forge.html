@@ -401,6 +401,16 @@
                 history.unshift({ ...item, id: Date.now(), timestamp: new Date().toISOString() });
                 // Keep only last 20 items
                 return this.set('history', history.slice(0, 20));
+            },
+
+            deleteFromHistory(id) {
+                const history = this.getHistory();
+                const updated = history.filter(item => item.id !== id);
+                return this.set('history', updated);
+            },
+
+            clearHistory() {
+                return this.set('history', []);
             }
         };
 
@@ -716,12 +726,16 @@
         // Toggle Component
         function Toggle({ checked, onChange, label }) {
             return (
-                <label className="flex items-center gap-3 cursor-pointer group">
+                <button
+                    type="button"
+                    onClick={() => onChange(!checked)}
+                    className="flex items-center gap-3 cursor-pointer group"
+                >
                     <div className={`relative w-11 h-6 rounded-full transition-colors ${checked ? 'bg-indigo-500' : 'bg-zinc-700'}`}>
                         <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'}`} />
                     </div>
                     <span className="text-sm text-zinc-300 group-hover:text-white transition-colors">{label}</span>
-                </label>
+                </button>
             );
         }
 
@@ -878,15 +892,6 @@
                 includeThumbnail: true
             });
 
-            // Quick profile for users without saved profiles
-            const [quickProfile, setQuickProfile] = useState({
-                name: 'My Channel',
-                genre: 'Educational',
-                tone: 'Engaging, informative, and conversational with moments of humor',
-                cta: 'If you learned something new, hit that subscribe button and ring the bell for more videos like this!',
-                verifiability: 'Factual/Historical'
-            });
-
             // Load data on mount
             useEffect(() => {
                 setProfiles(storage.getProfiles());
@@ -909,7 +914,7 @@
                 [config.duration]
             );
 
-            const activeProfile = selectedProfile || quickProfile;
+            // No activeProfile fallback - user must select a profile
 
             // Handlers
             const handleSaveProfile = () => {
@@ -938,19 +943,30 @@
             };
 
             const handleGenerate = () => {
-                if (!config.topic.trim()) return;
+                if (!config.topic.trim() || !selectedProfile) return;
 
-                const prompt = generatePrompt(activeProfile, config);
+                const prompt = generatePrompt(selectedProfile, config);
                 setGeneratedPrompt(prompt);
 
                 // Add to history
                 storage.addToHistory({
                     topic: config.topic,
-                    profile: activeProfile.name,
+                    profile: selectedProfile.name,
                     format: VIDEO_FORMATS[config.videoFormat].name,
                     template: SCRIPT_TEMPLATES[config.scriptTemplate].name
                 });
                 setHistory(storage.getHistory());
+            };
+
+            const handleDeleteHistory = (id) => {
+                storage.deleteFromHistory(id);
+                setHistory(storage.getHistory());
+            };
+
+            const handleClearHistory = () => {
+                if (!confirm('Clear all history?')) return;
+                storage.clearHistory();
+                setHistory([]);
             };
 
             const handleCopy = async () => {
@@ -1031,8 +1047,8 @@
                                     <StatCard
                                         icon="👤"
                                         label="Using Profile"
-                                        value={activeProfile.name}
-                                        subtext={activeProfile.genre}
+                                        value={selectedProfile?.name || 'None'}
+                                        subtext={selectedProfile?.genre || 'Select a profile'}
                                     />
                                 </div>
 
@@ -1180,64 +1196,23 @@
                                     />
                                 </div>
 
-                                {/* Quick Profile (if no profile selected) */}
+                                {/* No Profile Selected Notice */}
                                 {!selectedProfile && (
                                     <div className="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30">
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <span className="text-amber-400">⚠️</span>
-                                            <h3 className="text-lg font-semibold text-amber-300">Quick Profile</h3>
-                                            <span className="text-xs text-amber-400/70">(or select a saved profile in Profiles tab)</span>
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-zinc-400 mb-2">Channel Name</label>
-                                                <input
-                                                    type="text"
-                                                    value={quickProfile.name}
-                                                    onChange={(e) => setQuickProfile({ ...quickProfile, name: e.target.value })}
-                                                    className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white input-focus"
-                                                />
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-2xl">📺</span>
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-amber-300">No Profile Selected</h3>
+                                                    <p className="text-sm text-amber-400/70">Create a channel profile to generate scripts</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-zinc-400 mb-2">Genre</label>
-                                                <select
-                                                    value={quickProfile.genre}
-                                                    onChange={(e) => setQuickProfile({ ...quickProfile, genre: e.target.value })}
-                                                    className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white input-focus"
-                                                >
-                                                    {CONTENT_GENRES.map(g => <option key={g}>{g}</option>)}
-                                                </select>
-                                            </div>
-                                            <div className="md:col-span-2">
-                                                <label className="block text-sm font-medium text-zinc-400 mb-2">Tone & Voice</label>
-                                                <input
-                                                    type="text"
-                                                    value={quickProfile.tone}
-                                                    onChange={(e) => setQuickProfile({ ...quickProfile, tone: e.target.value })}
-                                                    className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white input-focus"
-                                                    placeholder="e.g., Authoritative yet approachable, with dry humor"
-                                                />
-                                            </div>
-                                            <div className="md:col-span-2">
-                                                <label className="block text-sm font-medium text-zinc-400 mb-2">Call to Action</label>
-                                                <input
-                                                    type="text"
-                                                    value={quickProfile.cta}
-                                                    onChange={(e) => setQuickProfile({ ...quickProfile, cta: e.target.value })}
-                                                    className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white input-focus"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-zinc-400 mb-2">Content Type</label>
-                                                <select
-                                                    value={quickProfile.verifiability}
-                                                    onChange={(e) => setQuickProfile({ ...quickProfile, verifiability: e.target.value })}
-                                                    className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white input-focus"
-                                                >
-                                                    <option>Factual/Historical</option>
-                                                    <option>Fictional/Creative</option>
-                                                </select>
-                                            </div>
+                                            <button
+                                                onClick={() => setActiveTab('profiles')}
+                                                className="px-4 py-2 rounded-lg bg-amber-500 text-black font-medium hover:bg-amber-400 transition-colors"
+                                            >
+                                                Create Profile
+                                            </button>
                                         </div>
                                     </div>
                                 )}
@@ -1245,11 +1220,11 @@
                                 {/* Generate Button */}
                                 <button
                                     onClick={handleGenerate}
-                                    disabled={!config.topic.trim()}
+                                    disabled={!config.topic.trim() || !selectedProfile}
                                     className="w-full py-4 rounded-xl font-bold text-lg btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                                 >
                                     <span>⚡</span>
-                                    GENERATE SCRIPT PROMPT
+                                    {!selectedProfile ? 'SELECT A PROFILE FIRST' : 'GENERATE SCRIPT PROMPT'}
                                 </button>
 
                                 {/* Generated Output */}
@@ -1424,29 +1399,50 @@
                         {/* History Tab */}
                         {activeTab === 'history' && (
                             <div className="space-y-6 animate-fade-in">
-                                <div>
-                                    <h2 className="text-2xl font-bold text-white">Generation History</h2>
-                                    <p className="text-zinc-400">Your recent prompt generations</p>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-white">Generation History</h2>
+                                        <p className="text-zinc-400">Your recent prompt generations</p>
+                                    </div>
+                                    {history.length > 0 && (
+                                        <button
+                                            onClick={handleClearHistory}
+                                            className="px-4 py-2 rounded-lg bg-red-500/20 text-red-400 font-medium hover:bg-red-500/30 transition-colors"
+                                        >
+                                            Clear All
+                                        </button>
+                                    )}
                                 </div>
 
                                 {history.length > 0 ? (
                                     <div className="space-y-3">
-                                        {history.map((item, idx) => (
+                                        {history.map((item) => (
                                             <div
                                                 key={item.id}
                                                 className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 flex items-center justify-between"
                                             >
-                                                <div>
+                                                <div className="flex-1">
                                                     <h4 className="font-medium text-white">{item.topic}</h4>
-                                                    <div className="flex gap-2 mt-1">
+                                                    <div className="flex flex-wrap gap-2 mt-1">
                                                         <span className="badge bg-zinc-700 text-zinc-300">{item.format}</span>
                                                         <span className="badge bg-zinc-700 text-zinc-300">{item.template}</span>
                                                         <span className="text-xs text-zinc-500">{item.profile}</span>
                                                     </div>
                                                 </div>
-                                                <span className="text-xs text-zinc-500">
-                                                    {new Date(item.timestamp).toLocaleDateString()}
-                                                </span>
+                                                <div className="flex items-center gap-3 ml-4">
+                                                    <span className="text-xs text-zinc-500">
+                                                        {new Date(item.timestamp).toLocaleDateString()}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => handleDeleteHistory(item.id)}
+                                                        className="p-2 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                                        title="Delete"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
