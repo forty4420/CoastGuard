@@ -1,291 +1,75 @@
-From: <Saved by Blink>
-Snapshot-Content-Location: https://lineeyes.com/test.html
-Subject: Studio Architect
-Date: Mon, 2 Feb 2026 14:57:51 -0500
-MIME-Version: 1.0
-Content-Type: multipart/related;
-	type="text/html";
-	boundary="----MultipartBoundary--V9ET4ss7KdYlFxyNS6DE21OKeUnCzVOp2T5dmVSm0l----"
-
-
-------MultipartBoundary--V9ET4ss7KdYlFxyNS6DE21OKeUnCzVOp2T5dmVSm0l----
-Content-Type: text/html
-Content-ID: <frame-3BF2C19C4C6D97F695EBC1A429D6960E@mhtml.blink>
-Content-Transfer-Encoding: binary
-Content-Location: https://lineeyes.com/test.html
-
-<!DOCTYPE html><html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><link rel="stylesheet" type="text/css" href="cid:css-cfa40c43-b890-4e1c-a555-fd48ccb8d106@mhtml.blink" />
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
 <title>Studio Architect</title>
-
-</head>
-<body>
-
-<!-- VIEWPORT -->
-<div id="viewport">
-<div id="canvas-area"><canvas id="mainCanvas" width="1920" height="1080"></canvas></div>
-<div id="inspector">
-    <h3>Properties</h3>
-    <div id="status-txt" style="color:#555">No clip selected</div>
-
-    <!-- VISUAL CLIP PROPS -->
-    <div id="clip-props" style="display:none">
-        <div class="sec-head">Media</div>
-        <div class="prop"><label>Duration (sec)</label><input type="number" id="clip-duration" min="0.5" max="120" step="0.5" value="5"></div>
-        <div class="prop"><label>Volume</label><div class="range-row"><input type="range" id="clip-volume" min="0" max="1" step="0.05" value="1"><span id="vol-val">1.0</span></div></div>
-
-        <div class="sec-head">Camera Movement</div>
-        <div class="prop">
-            <select id="pan-style">
-                <option value="static">Static</option>
-                <option value="zoomIn">Zoom In</option>
-                <option value="zoomOut">Zoom Out</option>
-                <option value="zoomInOut">Zoom In → Out</option>
-                <option value="panLeft">Pan Left</option>
-                <option value="panRight">Pan Right</option>
-                <option value="panUp">Pan Up</option>
-                <option value="panDown">Pan Down</option>
-                <option value="kenBurns">Ken Burns</option>
-                <option value="shake">Shake</option>
-                <option value="drift">Drift</option>
-                <option value="circle">Circle</option>
-            </select>
-        </div>
-        <div class="prop"><label>Intensity</label><div class="range-row"><input type="range" id="zoom-intensity" min="0.05" max="2" step="0.05" value="0.1"><span id="zoom-val">0.1</span></div></div>
-
-        <div class="sec-head">Transitions</div>
-        <div class="prop"><label>In</label>
-            <select id="transition-in">
-                <option value="none">None</option>
-                <option value="fade">Fade</option>
-                <option value="slideLeft">Slide Left</option>
-                <option value="slideRight">Slide Right</option>
-                <option value="slideUp">Slide Up</option>
-                <option value="slideDown">Slide Down</option>
-                <option value="zoomIn">Zoom In</option>
-                <option value="zoomOut">Zoom Out</option>
-                <option value="wipeLeft">Wipe Left</option>
-                <option value="wipeRight">Wipe Right</option>
-                <option value="wipeTop">Wipe Top</option>
-                <option value="wipeBottom">Wipe Bottom</option>
-            </select>
-        </div>
-        <div class="prop"><label>Out</label>
-            <select id="transition-out">
-                <option value="none">None</option>
-                <option value="fade">Fade</option>
-                <option value="slideLeft">Slide Left</option>
-                <option value="slideRight">Slide Right</option>
-                <option value="slideUp">Slide Up</option>
-                <option value="slideDown">Slide Down</option>
-                <option value="zoomIn">Zoom In</option>
-                <option value="zoomOut">Zoom Out</option>
-                <option value="wipeLeft">Wipe Left</option>
-                <option value="wipeRight">Wipe Right</option>
-                <option value="wipeTop">Wipe Top</option>
-                <option value="wipeBottom">Wipe Bottom</option>
-            </select>
-        </div>
-        <div class="prop"><label>Transition Duration (sec)</label><input type="number" id="trans-dur" min="0.1" max="5" step="0.1" value="0.5"></div>
-    </div>
-
-    <!-- OVERLAY PROPS -->
-    <div id="overlay-props" style="display:none">
-        <div class="sec-head">Text Overlay</div>
-        <div class="prop"><label>Text</label><input type="text" id="ov-text" value="Your Text"></div>
-        <div class="prop"><label>Font Size</label><div class="range-row"><input type="range" id="ov-size" min="12" max="200" step="2" value="48"><span id="ov-size-val">48</span></div></div>
-        <div class="prop"><label>Color</label><input type="color" id="ov-color" value="#ffffff"></div>
-        <div class="prop"><label>X Position %</label><div class="range-row"><input type="range" id="ov-x" min="0" max="100" step="1" value="50"><span id="ov-x-val">50</span></div></div>
-        <div class="prop"><label>Y Position %</label><div class="range-row"><input type="range" id="ov-y" min="0" max="100" step="1" value="50"><span id="ov-y-val">50</span></div></div>
-        <div class="prop"><label>Alignment</label><select id="ov-align"><option value="center">Center</option><option value="left">Left</option><option value="right">Right</option></select></div>
-        <div class="prop"><label>Duration (sec)</label><input type="number" id="ov-duration" min="0.5" max="120" step="0.5" value="3"></div>
-    </div>
-
-    <div id="delete-btn">🗑️ Delete</div>
-
-    <div style="margin-top:auto">
-        <button style="width:100%;background:#c0392b;color:#fff;border:none">⬛ Export Video</button>
-        <div style="margin-top:8px;padding-top:8px;border-top:1px solid #2a2a2a">
-            <div class="sec-head" style="margin-top:0">Shortcuts</div>
-            <div class="shortcuts">
-                <div><kbd>Space</kbd> Play/Pause &nbsp;<kbd>Home</kbd> Reset</div>
-                <div><kbd>←→</kbd> Seek ±1s &nbsp;<kbd>Del</kbd> Delete</div>
-                <div><kbd>S</kbd> Split &nbsp;<kbd>Ctrl+Z</kbd> Undo &nbsp;<kbd>Ctrl+Y</kbd> Redo</div>
-                <div><kbd>Shift+Click</kbd> Multi-select &nbsp;<kbd>Drag</kbd> Marquee</div>
-                <div><kbd>Scroll</kbd> Zoom timeline</div>
-            </div>
-        </div>
-    </div>
-</div>
-</div>
-
-<!-- TIMELINE -->
-<div id="timeline">
-<div class="toolbar">
-    <div class="toolbar-left">
-        <button class="primary" id="play-btn">▶ PLAY</button>
-        <button>⏮</button>
-        <div id="clock" class="time-display">00:00 / 00:00</div>
-    </div>
-    <div class="toolbar-right">
-        <button id="split-btn">✂️ Split</button>
-        <button id="ripple-btn">◀▶ Ripple</button>
-        <button id="undo-btn" title="Undo (Ctrl+Z)">↩ Undo</button>
-        <button id="redo-btn" title="Redo (Ctrl+Y)">↪ Redo</button>
-        <select class="tb-select" id="insert-mode"><option value="push">Insert &amp; Push</option><option value="place">Insert &amp; Place</option></select>
-        <button>🎵 Audio</button>
-        <button>🎬 Import</button>
-        <button>T Text</button>
-        <button>+ Track</button>
-        <button id="snap-btn">🔗 Snap</button>
-    </div>
-    
-    
-</div>
-<div id="track-container">
-    <canvas id="time-markers" width="10000" height="20"></canvas>
-    
-    
-    
-    
-<div class="track" data-track="0"><span class="track-label v-lbl">V1</span></div><div class="track" data-track="overlay"><span class="track-label ov-lbl">TEXT</span></div><div class="track" data-track="audio"><span class="track-label au-lbl">AUDIO</span></div><div id="playhead" style="left: 0px;"></div><div id="snap-line"></div><div id="drop-indicator"></div><div id="marquee"></div></div>
-</div>
-
-<!-- EXPORT OVERLAY -->
-<div id="export-overlay" class="export-overlay">
-    <h2 style="color:#fff;margin:0 0 6px">Exporting…</h2>
-    <div class="progress-bar"><div class="progress-fill" id="exp-progress"></div></div>
-    <div id="exp-status" style="color:#aaa;font-size:12px">Rendering…</div>
-    <button id="exp-cancel" style="margin-top:14px;background:#c0392b;color:#fff;border:none">Cancel</button>
-</div>
-
-
-
-</body></html>
-------MultipartBoundary--V9ET4ss7KdYlFxyNS6DE21OKeUnCzVOp2T5dmVSm0l----
-Content-Type: text/css
-Content-Transfer-Encoding: binary
-Content-Location: cid:css-cfa40c43-b890-4e1c-a555-fd48ccb8d106@mhtml.blink
-
-@charset "utf-8";
-
-:root { --bg: #121212; --panel: #1e1e1e; --border: #333; --accent: #00e5ff; --text: #e0e0e0; --vid-bg: rgba(255,100,100,0.22); --vid-bd: #ff6464; --ov-bg: rgba(155,89,182,0.22); --ov-bd: #9b59b6; --au-bg: rgba(39,174,96,0.18); --au-bd: #27ae60; }
-
-* { box-sizing: border-box; }
-
-body { background: var(--bg); color: var(--text); font-family: "Segoe UI", Inter, sans-serif; margin: 0px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; user-select: none; }
-
-#viewport { display: flex; flex: 1 1 0%; border-bottom: 2px solid var(--border); overflow: hidden; min-height: 0px; }
-
-#canvas-area { flex: 1 1 0%; background: rgb(0, 0, 0); display: flex; align-items: center; justify-content: center; }
-
-#mainCanvas { max-width: 95%; max-height: 95%; background: rgb(0, 0, 0); box-shadow: rgba(0, 0, 0, 0.8) 0px 0px 40px; border: 1px solid rgb(51, 51, 51); }
-
-#inspector { width: 272px; background: var(--panel); border-left: 1px solid var(--border); padding: 14px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; font-size: 11px; }
-
-#inspector h3 { margin: 0px 0px 2px; font-size: 13px; }
-
-.sec-head { font-size: 9px; color: rgb(85, 85, 85); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgb(42, 42, 42); padding-bottom: 3px; margin: 10px 0px 5px; }
-
-label { font-size: 9px; color: rgb(119, 119, 119); display: block; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.7px; }
-
-.prop { margin-bottom: 7px; }
-
-select, input[type="range"], input[type="number"], input[type="text"] { width: 100%; padding: 5px 6px; background: rgb(42, 42, 42); color: rgb(255, 255, 255); border: 1px solid rgb(68, 68, 68); border-radius: 3px; font-size: 11px; }
-
-input[type="range"] { padding: 0px; margin-top: 3px; accent-color: var(--accent); }
-
-input[type="color"] { width: 100%; height: 28px; border: none; background: none; cursor: pointer; padding: 0px; }
-
-.range-row { display: flex; gap: 5px; align-items: center; }
-
-.range-row input { flex: 1 1 0%; }
-
-.range-row span { font-size: 10px; color: rgb(136, 136, 136); min-width: 30px; text-align: right; }
-
-button { background: rgb(51, 51, 51); color: rgb(255, 255, 255); border: 1px solid rgb(68, 68, 68); padding: 6px 11px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 11px; }
-
-button.primary { background: var(--accent); color: rgb(0, 0, 0); border: none; }
-
-button:hover { opacity: 0.85; }
-
-#delete-btn { display: none; width: 100%; background: rgb(192, 57, 43); color: rgb(255, 255, 255); border: none; padding: 6px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 11px; text-align: center; }
-
-#delete-btn:hover { background: rgb(231, 76, 60); }
-
-#timeline { height: 300px; background: rgb(24, 24, 24); display: flex; flex-direction: column; }
-
-.toolbar { padding: 7px 14px; display: flex; gap: 7px; background: rgb(37, 37, 38); border-bottom: 1px solid var(--border); align-items: center; flex-shrink: 0; }
-
-.toolbar-left { display: flex; gap: 7px; align-items: center; }
-
-.toolbar-right { display: flex; gap: 7px; margin-left: auto; align-items: center; }
-
-.time-display { font-family: Consolas, monospace; font-size: 12px; color: var(--accent); margin-left: 4px; }
-
-select.tb-select { padding: 4px 6px; background: rgb(42, 42, 42); color: rgb(255, 255, 255); border: 1px solid rgb(68, 68, 68); border-radius: 3px; font-size: 10px; }
-
-#track-container { flex: 1 1 0%; overflow: auto; position: relative; background: rgb(24, 24, 24); cursor: crosshair; padding-top: 20px; }
-
-#time-markers { position: absolute; top: 0px; left: 0px; height: 20px; width: 10000px; pointer-events: none; border-bottom: 1px solid rgb(58, 58, 58); z-index: 10; }
-
-.track { height: 58px; background: rgba(255, 255, 255, 0.016); position: relative; min-width: 10000px; border-top: 1px solid rgb(37, 37, 37); }
-
-.track-label { position: sticky; left: 0px; top: 0px; z-index: 50; color: rgb(0, 0, 0); font-size: 9px; font-weight: 900; padding: 2px 6px; border-radius: 0px 0px 4px; display: inline-block; }
-
-.track-label.v-lbl { background: var(--accent); }
-
-.track-label.ov-lbl { background: rgb(155, 89, 182); }
-
-.track-label.au-lbl { background: rgb(39, 174, 96); }
-
-.clip { position: absolute; top: 7px; height: 44px; background: rgba(0, 229, 255, 0.15); border: 1px solid var(--accent); border-radius: 3px; cursor: grab; overflow: hidden; z-index: 20; }
-
-.clip.selected { border: 2px solid rgb(255, 255, 255); z-index: 25; }
-
-.clip.is-video { background: var(--vid-bg); border-color: var(--vid-bd); }
-
-.clip.is-overlay { background: var(--ov-bg); border-color: var(--ov-bd); }
-
-.clip.is-audio { background: var(--au-bg); border-color: var(--au-bd); cursor: default; top: 7px; }
-
-.clip-thumb { position: absolute; inset: 0px; object-fit: cover; opacity: 0.35; pointer-events: none; }
-
-.clip-label { position: absolute; left: 4px; top: 2px; z-index: 1; font-size: 9px; color: rgb(255, 255, 255); pointer-events: none; text-shadow: rgba(0, 0, 0, 0.9) 0px 1px 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 8px); }
-
-.handle { position: absolute; top: 0px; bottom: 0px; width: 6px; background: rgba(255, 255, 255, 0.35); cursor: ew-resize; z-index: 30; }
-
-.handle:hover { background: rgba(255, 255, 255, 0.6); }
-
-.handle.left { left: 0px; border-radius: 3px 0px 0px 3px; }
-
-.handle.right { right: 0px; border-radius: 0px 3px 3px 0px; }
-
-.audio-canvas { pointer-events: none; display: block; }
-
-#playhead { position: absolute; top: 0px; left: 0px; width: 12px; height: 100%; z-index: 100; cursor: ew-resize; transform: translateX(-6px); }
-
-#playhead::after { content: ""; position: absolute; top: 0px; left: 50%; transform: translateX(-50%); width: 1px; height: 100%; background: rgb(255, 61, 0); box-shadow: rgb(255, 61, 0) 0px 0px 4px; }
-
-#playhead::before { content: ""; position: absolute; top: 0px; left: 50%; transform: translateX(-50%); width: 0px; height: 0px; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 7px solid rgb(255, 61, 0); }
-
-#snap-line { position: absolute; top: 0px; height: 100%; width: 1px; background: rgb(255, 255, 0); z-index: 99; display: none; box-shadow: rgb(255, 255, 0) 0px 0px 5px; }
-
-#drop-indicator { position: absolute; height: 100%; width: 3px; background: var(--accent); z-index: 150; display: none; pointer-events: none; box-shadow: 0 0 10px var(--accent); }
-
-.export-overlay { position: fixed; inset: 0px; background: rgba(0, 0, 0, 0.88); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
-
-.export-overlay.active { display: flex; }
-
-.progress-bar { width: 300px; height: 14px; background: rgb(51, 51, 51); border-radius: 7px; margin: 10px; overflow: hidden; }
-
-.progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.12s; }
-
-.shortcuts { font-size: 9px; color: rgb(85, 85, 85); line-height: 1.8; }
-
-.shortcuts kbd { background: rgb(42, 42, 42); padding: 1px 4px; border-radius: 2px; color: rgb(136, 136, 136); }
-
-#marquee { position: absolute; border: 1px solid var(--accent); background: rgba(0, 229, 255, 0.08); pointer-events: none; z-index: 90; display: none; }
-
-button.active { background: rgb(42, 106, 122); border-color: var(--accent); }
-------MultipartBoundary--V9ET4ss7KdYlFxyNS6DE21OKeUnCzVOp2T5dmVSm0l------
+<style>
+:root {
+    --bg:#121212; --panel:#1e1e1e; --border:#333;
+    --accent:#00e5ff; --text:#e0e0e0;
+    --vid-bg:rgba(255,100,100,0.22); --vid-bd:#ff6464;
+    --ov-bg:rgba(155,89,182,0.22); --ov-bd:#9b59b6;
+    --au-bg:rgba(39,174,96,0.18); --au-bd:#27ae60;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Inter,sans-serif;margin:0;display:flex;flex-direction:column;height:100vh;overflow:hidden;user-select:none}
+
+/* ─── VIEWPORT ─── */
+#viewport{display:flex;flex:1;border-bottom:2px solid var(--border);overflow:hidden;min-height:0}
+#canvas-area{flex:1;background:#000;display:flex;align-items:center;justify-content:center}
+#mainCanvas{max-width:95%;max-height:95%;background:#000;box-shadow:0 0 40px rgba(0,0,0,.8);border:1px solid #333}
+
+/* ─── INSPECTOR ─── */
+#inspector{width:272px;background:var(--panel);border-left:1px solid var(--border);padding:14px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;font-size:11px}
+#inspector h3{margin:0 0 2px;font-size:13px}
+.sec-head{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #2a2a2a;padding-bottom:3px;margin:10px 0 5px}
+label{font-size:9px;color:#777;display:block;margin-bottom:2px;text-transform:uppercase;letter-spacing:.7px}
+.prop{margin-bottom:7px}
+select,input[type=range],input[type=number],input[type=text]{width:100%;padding:5px 6px;background:#2a2a2a;color:#fff;border:1px solid #444;border-radius:3px;font-size:11px}
+input[type=range]{padding:0;margin-top:3px;accent-color:var(--accent)}
+input[type=color]{width:100%;height:28px;border:none;background:none;cursor:pointer;padding:0}
+.range-row{display:flex;gap:5px;align-items:center}
+.range-row input{flex:1}
+.range-row span{font-size:10px;color:#888;min-width:30px;text-align:right}
+button{background:#333;color:#fff;border:1px solid #444;padding:6px 11px;border-radius:4px;cursor:pointer;font-weight:600;font-size:11px}
+button.primary{background:var(--accent);color:#000;border:none}
+button:hover{opacity:.85}
+#delete-btn{display:none;width:100%;background:#c0392b;color:#fff;border:none;padding:6px;border-radius:4px;cursor:pointer;font-weight:600;font-size:11px;text-align:center}
+#delete-btn:hover{background:#e74c3c}
+
+/* ─── TIMELINE ─── */
+#timeline{height:300px;background:#181818;display:flex;flex-direction:column}
+.toolbar{padding:7px 14px;display:flex;gap:7px;background:#252526;border-bottom:1px solid var(--border);align-items:center;flex-shrink:0}
+.toolbar-left{display:flex;gap:7px;align-items:center}
+.toolbar-right{display:flex;gap:7px;margin-left:auto;align-items:center}
+.time-display{font-family:Consolas,monospace;font-size:12px;color:var(--accent);margin-left:4px}
+select.tb-select{padding:4px 6px;background:#2a2a2a;color:#fff;border:1px solid #444;border-radius:3px;font-size:10px}
+
+#track-container{flex:1;overflow-x:auto;overflow-y:auto;position:relative;background:#181818;cursor:crosshair;padding-top:20px}
+#time-markers{position:absolute;top:0;left:0;height:20px;width:10000px;pointer-events:none;border-bottom:1px solid #3a3a3a;z-index:10}
+
+.track{height:58px;background:rgba(255,255,255,.015);position:relative;min-width:10000px;border-top:1px solid #252525}
+.track-label{position:sticky;left:0;top:0;z-index:50;color:#000;font-size:9px;font-weight:900;padding:2px 6px;border-radius:0 0 4px 0;display:inline-block}
+.track-label.v-lbl{background:var(--accent)}
+.track-label.ov-lbl{background:#9b59b6}
+.track-label.au-lbl{background:#27ae60}
+
+/* ─── CLIPS ─── */
+.clip{position:absolute;top:7px;height:44px;background:rgba(0,229,255,.15);border:1px solid var(--accent);border-radius:3px;cursor:grab;overflow:hidden;z-index:20}
+.clip.selected{border:2px solid #fff;z-index:25}
+.clip.is-video{background:var(--vid-bg);border-color:var(--vid-bd)}
+.clip.is-overlay{background:var(--ov-bg);border-color:var(--ov-bd)}
+.clip.is-audio{background:var(--au-bg);border-color:var(--au-bd);cursor:default;top:7px}
+.clip-thumb{position:absolute;inset:0;object-fit:cover;opacity:.35;pointer-events:none}
+.clip-label{position:absolute;left:4px;top:2px;z-index:1;font-size:9px;color:#fff;pointer-events:none;text-shadow:0 1px 2px rgba(0,0,0,.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 8px)}
+.handle{position:absolute;top:0;bottom:0;width:6px;background:rgba(255,255,255,.35);cursor:ew-resize;z-index:30}
+.handle:hover{background:rgba(255,255,255,.6)}
+.handle.left{left:0;border-radius:3px 0 0 3px}
+.handle.right{right:0;border-radius:0 3px 3px 0}
+
+/* audio waveform canvas inside audio clip */
+.audio-canvas{pointer-events:none;display:block}
+
+/* ─── PLAYHEAD ─── */
+#playhead{position:absolute;top:0;left:0;width:12px;height:100%;z-index:100;cursor:ew-resize;transform:translateX(-6px)}
+#playhead::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:1px;height:100%;background:#ff3d00;box-shadow
